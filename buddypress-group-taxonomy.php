@@ -6,7 +6,7 @@
   Author: Malte Müller
   Author URI: http://www.maltem.de
   License: GPLv2 or later
-  Version: 1.1
+  Version: 1.2
  */
  
 /************************
@@ -16,7 +16,6 @@
 /*
  * Registers the taxonomy
  */
-
 function bpgroups_taxonomy_init() {
 	// create a new taxonomy
 	register_taxonomy(
@@ -67,7 +66,8 @@ function bpgroups_meta_box_callback($post) {
 		if (bp_has_groups()) :
 			while (bp_groups()) : bp_the_group();
 				$groupname = bp_get_group_name();
-
+				$groupslug = bp_get_group_slug();
+				
 				// Set group as taxonomy term if not already done
 				$termexists = term_exists($groupname, 'buddypress_groups');
 				if (empty($termexists)) {
@@ -78,9 +78,9 @@ function bpgroups_meta_box_callback($post) {
 				if (groups_is_user_member(get_current_user_id(), bp_get_group_id())) {
 					$buddypressgroups[] = array(
 							'name' => $groupname,
-							'slug' => strtolower($groupname)
+							'slug' => $groupslug
 					);
-					$checkgroups[] = strtolower($groupname);
+					$checkgroups[] = strtolower($groupslug);
 				}
 			endwhile;
 		endif;
@@ -167,18 +167,24 @@ add_action('save_post', 'bpgroups_save_meta_box_data');
  * 
  * @param text $text Text for the link. Use %s as placeholder for the link, e.g 'Dieser Beitrag ist mit der Gruppe %s verknüpft.' (default) 
  * @param obj $obj Optionally a specicific post object, if not set the current post in the loop
+ * @param bool $linkbuddypressgroup True for linking to the real Buddypress group page, false for the group taxonomy.
  */
-function printBuddypressGroupAssignment($text = 'Dieser Beitrag ist mit der Gruppe %s verknüpft.', $obj = NULL) {
+function printBuddypressGroupAssignment($text = 'Dieser Beitrag ist mit der Gruppe %s verknüpft.', $obj = NULL, $linkbuddypressgroup = true) {
 	global $post;
 	if(!is_null($obj)) {
 		$obj = $post;
 	}
 	$groups = wp_get_object_terms(array($post->ID), array('buddypress_groups'));
 	if ($groups) {
-		$group = $groups[0]->name;
-		if ($group != 'keine') {
-			$grouplink = get_term_link($groups[0]);
-			$link = '<a href="'. esc_url($grouplink).'" title="'.esc_attr($group).'">'.esc_html($group).'</a>';
+		$group_name = $groups[0]->name;
+		$group_slug = $groups[0]->slug;
+		if ($group_slug != 'keine') {
+			if($linkbuddypressgroup && function_exists('bp_get_groups_root_slug')) {
+				$group_link = get_bloginfo('url') . '/' . bp_get_groups_root_slug() . '/' . $group_slug;
+			} else {
+				$group_link = get_term_link($groups[0]);
+			}
+			$link = '<a href="'. esc_url($group_link).'" title="'.esc_attr($group_name).'">'.esc_html($group_name).'</a>';
 			if(is_null($text)) {
 				$text = 'Gruppe: %s';
 			}
