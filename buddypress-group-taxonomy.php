@@ -6,7 +6,7 @@
   Author: Malte Müller
   Author URI: http://www.maltem.de
   License: GPLv2 or later
-  Version: 1.0
+  Version: 1.1
  */
  
 /************************
@@ -39,14 +39,11 @@ add_action('init', 'bpgroups_taxonomy_init');
  */
 function bpgroups_add_meta_box() {
 	$screen = get_current_screen();
-	//print_r($screen);
-	if ($screen->action != 'add') {
-		$screens = array('post');
-		foreach ($screens as $screen) {
-			add_meta_box(
-							'bpgroups_sectionid', ('Buddypress-Gruppen'), 'bpgroups_meta_box_callback', $screen
-			);
-		}
+	$screens = array('post');
+	foreach ($screens as $screen) {
+		add_meta_box(
+						'bpgroups_sectionid', ('Buddypress-Gruppen'), 'bpgroups_meta_box_callback', $screen
+		);
 	}
 }
 
@@ -102,18 +99,19 @@ function bpgroups_meta_box_callback($post) {
 	$assignedgroups = wp_get_object_terms(array($post->ID), array('buddypress_groups'));
 	$assignedgroup = 'keine'; // posts without assignments
 	if ($assignedgroups) {
-		$assignedgroup = $assignedgroups[0]->name; // technically more than one but we use only one
+		$assignedgroup = $assignedgroups[0]->slug; // technically more than one but we use only one
 	}
 	?>
 	<p>
 		<select name="bpgroups_groupselector" id="bpgroups_groupselector" size="1">
 			<option value="keine" <?php selected($assignedgroup, 'keine', true); ?>>Keine</option>
 			<?php
+			
 			foreach ($buddypressgroups as $bpgroup) {
 				$name = $bpgroup['name'];
 				$slug = $bpgroup['slug'];
 				?>
-				<option value="<?php echo esc_html($slug); ?>" <?php selected($assignedgroup, esc_html($slug), true); ?>><?php echo esc_html($name); ?></option>
+				<option value="<?php echo esc_html($slug); ?>" <?php selected($assignedgroup, $slug, true); ?>><?php echo esc_html($name); ?></option>
 	<?php } ?>
 		</select>
 	</p>
@@ -214,5 +212,42 @@ function printBuddyPressGroups($text = null) {
 			?>
 		</ul>
 		<?php
+	}
+}
+
+/**
+ * Prints a linked list of all posts assigned to the buddypress $groupslug or if not set the current Buddypress group.
+ * 
+ * @param string $groupslug slug of the buddypress_group taxonomy to get the post of (the slug should be sthe same as the real Buddypress group slug)
+ */
+function printPostsByBuddypressGroupTax($groupslug = NULL) {
+	if (function_exists('bp_get_current_group_slug')) {
+		if (is_null($groupslug)) {
+			$currentgroup = bp_get_current_group_slug();
+			$posts = get_posts(array(
+					'numberposts' => -1,
+					'post_type' => 'post',
+					'tax_query' => array(
+							array(
+									'taxonomy' => 'buddypress_groups',
+									'field' => 'slug',
+									'terms' => $currentgroup
+							)
+					)
+			));
+			if ($posts) {
+				?>
+				<ul class="posts_by_buddypressgroup">
+					<?php
+					foreach ($posts as $post) {
+						?>
+						<li><a href="<?php echo esc_url(get_permalink($post->ID)); ?>" title="<?php echo esc_attr($post->post_title); ?>"><?php echo esc_html($post->post_title); ?></a></li>
+						<?php
+					}
+					?>
+				</ul>
+				<?php
+			}
+		}
 	}
 }
