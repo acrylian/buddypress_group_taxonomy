@@ -2,6 +2,8 @@
 
 This plugin creates a custom taxonomy from the Buddypress groups so you can assign posts to them.
 
+Compatible with WordPress 4.3.1+ and BuddyPress 2.4.2+
+
 ## Installation and 
 
 Just place the .php file in `yourdomain.com/wp-content/plugins/` and enable it on the WordPress backend. 
