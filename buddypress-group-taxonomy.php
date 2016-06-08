@@ -6,7 +6,7 @@
   Author: Malte Müller
   Author URI: http://www.maltem.de
   License: GPLv2 or later
-  Version: 1.2
+  Version: 1.2.1
  */
  
 /************************
@@ -41,7 +41,7 @@ function bpgroups_add_meta_box() {
 	$screens = array('post');
 	foreach ($screens as $screen) {
 		add_meta_box(
-						'bpgroups_sectionid', ('Buddypress-Gruppen'), 'bpgroups_meta_box_callback', $screen
+						'bpgroups_sectionid', __('Buddypress-Gruppen'), 'bpgroups_meta_box_callback', $screen
 		);
 	}
 }
@@ -60,7 +60,7 @@ function bpgroups_meta_box_callback($post) {
 
 	// to store the groups this user is member of
 	$buddypressgroups = array();
-
+	$checkgroups = array();
 	// Get real Buddypress Groups
 	if (function_exists('bp_groups')) {
 		if (bp_has_groups()) :
